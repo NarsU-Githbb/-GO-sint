@@ -1,26 +1,25 @@
 package main
 
 import (
-"flag"
-"fmt"
+	"flag"
+	"fmt"
 )
 
 var (
-	fullSearch = flag.Bool("n", false, "Performs a full-name search.")
-	ipSearch = flag.Bool("ip", false, "Performs a IP search.")
+	fullSearch     = flag.Bool("n", false, "Performs a full-name search.")
+	ipSearch       = flag.Bool("ip", false, "Performs a IP search.")
 	usernameSearch = flag.Bool("un", false, "Performs a username search.")
-	help = flag.Bool("help", false, "help is on the way")
-
+	help           = flag.Bool("help", false, "help is on the way")
 )
 
 func main() {
 
-flag.Parse()
+	flag.Parse()
 	if *help {
 		printHelp()
 		return
 	}
-return
+
 }
 
 func printHelp() {
@@ -34,7 +33,7 @@ func printHelp() {
 		green     = "\033[32m"
 		yellow    = "\033[33m"
 		red       = "\033[31m"
-		magenta  = "\033[95m"
+		magenta   = "\033[95m"
 	)
 
 	fmt.Println()
@@ -52,7 +51,7 @@ func printHelp() {
 
 	fmt.Println(yellow + bold + "Examples:" + reset)
 	fmt.Println()
-	fmt.Println(bold + "1. go run data_digger.go " + blue +  "-n Dwight Schrute" + reset)
+	fmt.Println(bold + "1. go run data_digger.go " + blue + "-n Dwight Schrute" + reset)
 	fmt.Println()
 	fmt.Println(bold + "First Name:" + reset + " Dwight")
 	fmt.Println(bold + "Last Name:" + reset + " Schurute")
@@ -60,7 +59,7 @@ func printHelp() {
 	fmt.Println(bold + "Phone Number:" + reset + " 308-826-5962")
 	fmt.Println(bold + "Result written to file:" + reset + "n_dwight_schrute.txt")
 	fmt.Println()
-	fmt.Println(bold +  "2. go run data_digger.go" + blue + " -ip 192.168.1.1" + reset)
+	fmt.Println(bold + "2. go run data_digger.go" + blue + " -ip 192.168.1.1" + reset)
 	fmt.Println()
 	fmt.Println(bold + "ISP:" + reset + " Dunder Mifflin")
 	fmt.Println(bold + "Location:" + reset + " 34.210766, -118.436440")
