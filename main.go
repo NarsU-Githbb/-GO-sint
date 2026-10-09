@@ -1,23 +1,51 @@
 package main
 
 import (
+	"digital_detective/scraping"
 	"flag"
 	"fmt"
+	"os"
 )
 
 var (
-	fullSearch     = flag.Bool("n", false, "Performs a full-name search.")
-	ipSearch       = flag.Bool("ip", false, "Performs a IP search.")
-	usernameSearch = flag.Bool("un", false, "Performs a username search.")
-	help           = flag.Bool("help", false, "help is on the way")
+	fullSearch     = flag.String("n", "", "Performs a full-name search.")
+	ipSearch       = flag.String("ip", "", "Performs a IP search.")
+	usernameSearch = flag.String("un", "", "Performs a username search.")
 )
 
 func main() {
 
+	flag.Usage = printHelp
 	flag.Parse()
-	if *help {
+
+	activeFlags := 0
+	if *fullSearch != "" {
+		activeFlags++
+	}
+	if *ipSearch != "" {
+		activeFlags++
+	}
+	if *usernameSearch != "" {
+		activeFlags++
+	}
+
+	if activeFlags != 1 { //allow just one for now, but change if decide to do multi-input
 		printHelp()
-		return
+		os.Exit(1)
+	}
+
+	switch {
+	case *fullSearch != "":
+		fmt.Printf("Starting Full Name Search for: %s\n", *fullSearch)
+		scraping.ExecuteNameSearch(*fullSearch)
+
+	case *ipSearch != "":
+		fmt.Printf("Starting IP Search for: %s\n", *ipSearch)
+		scraping.ExecuteIPSearch(*ipSearch)
+
+	case *usernameSearch != "":
+		fmt.Printf("Starting Username Search for: %s\n", *usernameSearch)
+		scraping.ExecuteUsernameSearch(*usernameSearch)
 	}
 
 }
