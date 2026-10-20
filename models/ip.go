@@ -4,6 +4,8 @@ package models
 
 //ip-api.com and ipapi.co for ip search? is in legal?
 
+//http://ip-api.com/json/{query}
+
 type IPModel struct {
 	ISP        string `json:"isp"`
 	Location   Cordinates
@@ -11,6 +13,6 @@ type IPModel struct {
 }
 
 type Cordinates struct {
-	Vertical   int `json:"vertical"`
-	Horizontal int `json:"horizontal"`
+	Latitude  int `json:"lat"`
+	Longitude int `json:"lon"`
 }

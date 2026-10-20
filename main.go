@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"digital_detective/scraping"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 var (
@@ -14,6 +17,11 @@ var (
 )
 
 func main() {
+
+	//context is needed so that the program doesn't secretly keep going even after ctrl + C
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	flag.Usage = printHelp
 	flag.Parse()
@@ -34,18 +42,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	var argument string
+
+	scraper := scraping.NewScraper()
+
 	switch {
+
 	case *fullSearch != "":
-		fmt.Printf("Starting Full Name Search for: %s\n", *fullSearch)
-		scraping.ExecuteNameSearch(*fullSearch)
+		argument = *fullSearch
+		fmt.Printf("Starting Full Name Search for: %s\n", argument)
+		//scraper.ExecuteNameSearch(ctx, argument)
 
 	case *ipSearch != "":
-		fmt.Printf("Starting IP Search for: %s\n", *ipSearch)
-		scraping.ExecuteIPSearch(*ipSearch)
+		argument = *ipSearch
+		fmt.Printf("Starting IP Search for: %s\n", argument)
+		//scraper.ExecuteIPSearch(ctx, argument)
 
 	case *usernameSearch != "":
-		fmt.Printf("Starting Username Search for: %s\n", *usernameSearch)
-		scraping.ExecuteUsernameSearch(*usernameSearch)
+		argument = *usernameSearch
+		fmt.Printf("Starting Username Search for: %s\n", argument)
+		result := scraper.ExecuteUsernameSearch(ctx, argument)
+
+		fileName := fmt.Sprintf("un_%s.txt", argument)
+		fileContent := CreateUsernameOutput(argument, result, fileName)
+
+		err := WriteOutput(fileName, fileContent)
+		if err != nil {
+			fmt.Printf("Error writing results to file: %v\n", err)
+		} else {
+			fmt.Printf("Result successfully written to file: %s\n", fileName)
+		}
 	}
 
 }
