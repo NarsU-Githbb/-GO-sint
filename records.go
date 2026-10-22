@@ -6,6 +6,28 @@ import (
 	"os"
 )
 
+func CreateFullOutput(fullname string, result models.FullModel, filename string) string {
+
+	output := fmt.Sprintf("--- Scan Results for @%s ---\n", fullname)
+	output += fmt.Sprintf("First Name: %t\n", result.FirstName)
+	output += fmt.Sprintf("Last Name: %t\n", result.LastName)
+	output += fmt.Sprintf("Adress: %t\n", result.Address)
+	output += fmt.Sprintf("Phone Number: %t\n", result.PhoneNumber)
+	output += fmt.Sprintf("Result written to file:      %s\n\n", filename)
+
+	return output
+}
+
+func CreateIPOutput(IP string, result models.IPModel, filename string) string {
+
+	output := fmt.Sprintf("--- Scan Results for @%s ---\n", IP)
+	output += fmt.Sprintf("ISP: %t\n", result.ISP)
+	output += fmt.Sprintf("Location: %t\n", result.Location)
+	output += fmt.Sprintf("Result written to file:      %s\n\n", filename)
+
+	return output
+}
+
 func CreateUsernameOutput(username string, result models.UserModel, filename string) string {
 
 	output := fmt.Sprintf("--- Scan Results for @%s ---\n", username)

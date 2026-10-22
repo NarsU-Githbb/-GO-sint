@@ -10,7 +10,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type Scraper struct {
+type UnScraper struct {
 	client            *http.Client
 	secondLifeLimiter *rate.Limiter
 	xLimiter          *rate.Limiter
@@ -19,8 +19,8 @@ type Scraper struct {
 	githubLimiter     *rate.Limiter
 }
 
-func NewScraper() *Scraper {
-	return &Scraper{
+func NewUnScraper() *UnScraper {
+	return &UnScraper{
 		client: &http.Client{
 			// Always assign a reasonable timeout so CLI tool doesn't hang indefinitely
 			Timeout: 7 * time.Second,
@@ -35,7 +35,7 @@ func NewScraper() *Scraper {
 	}
 }
 
-func (scrp *Scraper) prepareRequest(ctx context.Context, url string) (*http.Request, error) {
+func (scrp *UnScraper) prepareRequest(ctx context.Context, url string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (scrp *Scraper) prepareRequest(ctx context.Context, url string) (*http.Requ
 	return req, nil
 }
 
-func (scrp *Scraper) SecondLifeCheck(ctx context.Context, username string) (bool, error) {
+func (scrp *UnScraper) SecondLifeCheck(ctx context.Context, username string) (bool, error) {
 
 	url := fmt.Sprintf("https://my.secondlife.com/%s", username)
 
@@ -78,7 +78,7 @@ func (scrp *Scraper) SecondLifeCheck(ctx context.Context, username string) (bool
 	}
 }
 
-func (scrp *Scraper) XCheck(ctx context.Context, username string) (bool, error) {
+func (scrp *UnScraper) XCheck(ctx context.Context, username string) (bool, error) {
 	url := fmt.Sprintf("https://x.com/%s", username)
 
 	if err := scrp.xLimiter.Wait(ctx); err != nil {
@@ -107,7 +107,7 @@ func (scrp *Scraper) XCheck(ctx context.Context, username string) (bool, error) 
 	}
 }
 
-func (scrp *Scraper) LinkedInCheck(ctx context.Context, username string) (bool, error) {
+func (scrp *UnScraper) LinkedInCheck(ctx context.Context, username string) (bool, error) {
 	url := fmt.Sprintf("https://linkedin.com/in/%s", username)
 
 	if err := scrp.linkedInLimiter.Wait(ctx); err != nil {
@@ -137,7 +137,7 @@ func (scrp *Scraper) LinkedInCheck(ctx context.Context, username string) (bool, 
 	}
 }
 
-func (scrp *Scraper) InstagramCheck(ctx context.Context, username string) (bool, error) {
+func (scrp *UnScraper) InstagramCheck(ctx context.Context, username string) (bool, error) {
 	url := fmt.Sprintf("https://www.instagram.com/%s", username)
 
 	if err := scrp.instagramLimiter.Wait(ctx); err != nil {
@@ -166,7 +166,7 @@ func (scrp *Scraper) InstagramCheck(ctx context.Context, username string) (bool,
 	}
 }
 
-func (scrp *Scraper) GithubCheck(ctx context.Context, username string) (bool, error) {
+func (scrp *UnScraper) GithubCheck(ctx context.Context, username string) (bool, error) {
 	url := fmt.Sprintf("https://github.com/%s", username)
 
 	if err := scrp.githubLimiter.Wait(ctx); err != nil {
@@ -194,7 +194,7 @@ func (scrp *Scraper) GithubCheck(ctx context.Context, username string) (bool, er
 	}
 }
 
-func (scrp *Scraper) ExecuteUsernameSearch(ctx context.Context, username string) models.UserModel {
+func (scrp *UnScraper) ExecuteUsernameSearch(ctx context.Context, username string) models.UserModel {
 
 	secondLife, _ := scrp.SecondLifeCheck(ctx, username)
 	x, _ := scrp.XCheck(ctx, username)

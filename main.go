@@ -44,14 +44,25 @@ func main() {
 
 	var argument string
 
-	scraper := scraping.NewScraper()
+	uns := scraping.NewUnScraper()
+	fns := scraping.NewFnScraper()
 
 	switch {
 
 	case *fullSearch != "":
 		argument = *fullSearch
 		fmt.Printf("Starting Full Name Search for: %s\n", argument)
-		//scraper.ExecuteNameSearch(ctx, argument)
+		result := fns.ExecuteFullSearch(ctx, argument)
+
+		fileName := fmt.Sprintf("n_%s.txt", argument)
+		fileContent := CreateFullOutput(argument, result, fileName)
+
+		err := WriteOutput(fileName, fileContent)
+		if err != nil {
+			fmt.Printf("Error writing results to file: %v\n", err)
+		} else {
+			fmt.Printf("Result successfully written to file: %s\n", fileName)
+		}
 
 	case *ipSearch != "":
 		argument = *ipSearch
@@ -61,7 +72,7 @@ func main() {
 	case *usernameSearch != "":
 		argument = *usernameSearch
 		fmt.Printf("Starting Username Search for: %s\n", argument)
-		result := scraper.ExecuteUsernameSearch(ctx, argument)
+		result := uns.ExecuteUsernameSearch(ctx, argument)
 
 		fileName := fmt.Sprintf("un_%s.txt", argument)
 		fileContent := CreateUsernameOutput(argument, result, fileName)
