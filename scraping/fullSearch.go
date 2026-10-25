@@ -138,7 +138,7 @@ func (scrp *FnScraper) SimulatedFnCheck(ctx context.Context, fullName string) (*
 	return nil, nil
 }
 
-func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) models.FullModel {
+func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (models.FullModel, error) {
 
 	profilePointer, err := scrp.SimulatedFnCheck(ctx, fullName)
 	if err != nil || profilePointer == nil {
@@ -165,9 +165,9 @@ func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) m
 				City:       "not found!",
 			},
 			PhoneNumber: "not found!",
-		}
+		}, nil
 	}
 
 	result := *profilePointer
-	return result
+	return result, nil
 }

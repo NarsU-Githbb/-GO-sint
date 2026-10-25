@@ -43,21 +43,26 @@ func main() {
 	}
 
 	var argument string
-
-	uns := scraping.NewUnScraper()
 	fns := scraping.NewFnScraper()
+	ips := scraping.NewIpScraper()
+	uns := scraping.NewUnScraper()
 
 	switch {
 
 	case *fullSearch != "":
 		argument = *fullSearch
 		fmt.Printf("Starting Full Name Search for: %s\n", argument)
-		result := fns.ExecuteFullSearch(ctx, argument)
+		result, err := fns.ExecuteFullSearch(ctx, argument)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Full-name search failed: %v\n", err)
+			os.Exit(1)
+		}
 
-		fileName := fmt.Sprintf("n_%s.txt", argument)
+		makeFilename := createFileName(argument)
+		fileName := fmt.Sprintf("n_%s.txt", makeFilename)
 		fileContent := CreateFullOutput(argument, result, fileName)
 
-		err := WriteOutput(fileName, fileContent)
+		err = WriteOutput(fileName, fileContent)
 		if err != nil {
 			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
@@ -67,17 +72,37 @@ func main() {
 	case *ipSearch != "":
 		argument = *ipSearch
 		fmt.Printf("Starting IP Search for: %s\n", argument)
-		//scraper.ExecuteIPSearch(ctx, argument)
+		result, err := ips.ExecuteIPSearch(ctx, argument)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "IP search failed: %v\n", err)
+			os.Exit(1)
+		}
+		makeFilename := createFileName(argument)
+		fileName := fmt.Sprintf("ip_%s.txt", makeFilename)
+		fileContent := CreateIPOutput(argument, result, fileName)
+
+		err = WriteOutput(fileName, fileContent)
+		if err != nil {
+			fmt.Printf("Error writing results to file: %v\n", err)
+		} else {
+			fmt.Printf("Result successfully written to file: %s\n", fileName)
+		}
 
 	case *usernameSearch != "":
 		argument = *usernameSearch
 		fmt.Printf("Starting Username Search for: %s\n", argument)
-		result := uns.ExecuteUsernameSearch(ctx, argument)
+		result, err := uns.ExecuteUsernameSearch(ctx, argument)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Username search failed: %v\n", err)
+			os.Exit(1)
+		}
 
-		fileName := fmt.Sprintf("un_%s.txt", argument)
+		makeFilename := createFileName(argument)
+		fileName := fmt.Sprintf("un_%s.txt", makeFilename)
+
 		fileContent := CreateUsernameOutput(argument, result, fileName)
 
-		err := WriteOutput(fileName, fileContent)
+		err = WriteOutput(fileName, fileContent)
 		if err != nil {
 			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
@@ -102,7 +127,7 @@ func printHelp() {
 	)
 
 	fmt.Println()
-	fmt.Println(italic + bold + "Usage: go run data_digger.go" + blue + " [options] <input>" + reset)
+	fmt.Println(italic + bold + "Usage: go run . " + blue + " [options] <input>" + reset)
 	fmt.Println()
 
 	fmt.Println(yellow + bold + "Flags:" + reset)
@@ -116,7 +141,7 @@ func printHelp() {
 
 	fmt.Println(yellow + bold + "Examples:" + reset)
 	fmt.Println()
-	fmt.Println(bold + "1. go run data_digger.go " + blue + "-n Dwight Schrute" + reset)
+	fmt.Println(bold + "1. go run . " + blue + "-n Dwight Schrute" + reset)
 	fmt.Println()
 	fmt.Println(bold + "First Name:" + reset + " Dwight")
 	fmt.Println(bold + "Last Name:" + reset + " Schurute")
@@ -124,13 +149,13 @@ func printHelp() {
 	fmt.Println(bold + "Phone Number:" + reset + " 308-826-5962")
 	fmt.Println(bold + "Result written to file:" + reset + "n_dwight_schrute.txt")
 	fmt.Println()
-	fmt.Println(bold + "2. go run data_digger.go" + blue + " -ip 192.168.1.1" + reset)
+	fmt.Println(bold + "2. go run . " + blue + " -ip 192.168.1.1" + reset)
 	fmt.Println()
 	fmt.Println(bold + "ISP:" + reset + " Dunder Mifflin")
 	fmt.Println(bold + "Location:" + reset + " 34.210766, -118.436440")
 	fmt.Println(bold + "Result written to file:" + reset + " ip_192_168_1_1.txt")
 	fmt.Println()
-	fmt.Println(bold + "3. go run data_digger.go " + blue + "-un @recyclops" + reset)
+	fmt.Println(bold + "3. go run go run . " + blue + "-un @recyclops" + reset)
 	fmt.Println()
 	fmt.Println(bold + "Second Life:" + reset + " yes")
 	fmt.Println(bold + "X:" + reset + " no")

@@ -194,7 +194,7 @@ func (scrp *UnScraper) GithubCheck(ctx context.Context, username string) (bool, 
 	}
 }
 
-func (scrp *UnScraper) ExecuteUsernameSearch(ctx context.Context, username string) models.UserModel {
+func (scrp *UnScraper) ExecuteUsernameSearch(ctx context.Context, username string) (models.UserModel, error) {
 
 	secondLife, _ := scrp.SecondLifeCheck(ctx, username)
 	x, _ := scrp.XCheck(ctx, username)
@@ -210,6 +210,6 @@ func (scrp *UnScraper) ExecuteUsernameSearch(ctx context.Context, username strin
 		Github:     github,
 	}
 
-	return result
+	return result, nil
 
 }
