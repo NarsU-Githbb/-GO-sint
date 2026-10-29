@@ -26,35 +26,5 @@
       }
     ],
     "compliance_note": "MOCK DATA ONLY. Real lookup simulated."
-  },
-
-  
-  {
-    "id": "osint_mock_002",
-    "search_query": "Dwight Schrute",
-    "status": "match_found",
-    "timestamp_utc": "2026-10-21T19:05:00Z",
-    "person": {
-      "full_name": "Dwight Pickles Schrute",
-      "birth_year": 1992,
-      "current_location": "Turku, Finland"
-    },
-    "scraped_sources": [
-      {
-        "source_type": "domain_registration",
-        "source_name": "MockSource_FI",
-        "phone_number": "+358 50 987 6543"
-      },
-      {
-        "source_type": "business_registry",
-        "source_name": "MockBiz_Data",
-        "address": {
-          "street": "Pineapple Avenue 5",
-          "postal_code": "20100",
-          "city": "Turku"
-        }
-      }
-    ],
-    "compliance_note": "MOCK DATA ONLY. Real lookup simulated."
   }
 ]

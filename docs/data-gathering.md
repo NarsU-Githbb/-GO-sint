@@ -6,7 +6,7 @@ This OSINT tool has 3 different search methods:
 
 * **IP Address:** Method determine the location and Internet Service Provider (ISP) among some information on the possibility if the IP has been abused. This method integrates ip-api, ipwhois & abuseipdb APIs & cross-referances so that the information can be validated. Mostly the cross-referencing happens between ip-api & ipwhois APIs, while Abuseipdb focuses on the information if IP has been compromised. 
 
-* **Social Media Username:** Method checks for the user's presence on 5 social media platforms - including Second Life, X, LinkedIn, Instagram and GitHub to determine if accounts exists on the platform. This one uses basic http.requests to check if the username can be found on the platform according to http status codes. 
+* **Social Media Username:** Method checks for the user's presence on 5 social media platforms - including X, Youtube, Soundcloud, Github and Gitea to determine if accounts exists on the platform. This one uses basic http.requests to check if the username can be found on the platform according to http status codes. 
 
 ## 🛠️ Libraries and Methods
 

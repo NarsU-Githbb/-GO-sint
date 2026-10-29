@@ -1,4 +1,4 @@
-# (g)OSINT CLI Tool
+# (G)Osint CLI Tool
 
 A Lightweight command-line intelligence tool written in Go, designed to demonstrate automated open-source data aggregation techniques. Built strictly for educational purposes, this application showcases how to safely perform username profile lookups, query public IP geolocation endpoints and cross-reference threat intelligence data using Go Standard library rather than resource-heavy scraping frameworks.
 
@@ -6,10 +6,10 @@ A Lightweight command-line intelligence tool written in Go, designed to demonstr
 
 Before you get started, you should read this documentation to understand the project & the concepts needed to grasp in order to understand why osint is useful technique for cybersecurity? (also they include answers to the testing questions inside kood/Sisu platform)
 
-[What is OSINT?](docs/osint.md).
-[Digital Footprint](docs/digital_footprint.md)
-[CIA Triad](docs/cia_triad.md.md).
-[Data Gathering Documentation](docs/data-gathering.md).
+* [What is OSINT?](docs/osint.md)
+* [Digital Footprint](docs/digital_footprint.md)
+* [CIA Triad](docs/cia_triad.md.md).
+* [Data Gathering Documentation](docs/data-gathering.md).
 
 ## 🚀 How to Install and Run
 
@@ -48,33 +48,38 @@ go run . [options] <input>
 go run . -n "Dwight Schrute"
 ```
 **Output Preview:**
-* **First Name:** Dwight
-* **Last Name:** Schrute
-* **Address:** Mango street 12 A 4, 00100 Helsinki
-* **Phone Number:** +358 40 123 4567
-* **Result written to file:** `n_dwight_schrute.txt`
+```bash
+First Name: Dwight
+Last Name: Schrute
+Address: Mango street 12 A 4, 00100 Helsinki
+Phone Number: +358 40 123 4567
+Result written to file: `n_dwight_schrute.txt`
+```
 
 #### 2. IP Address Lookup
 ```bash
 go run . -ip 1.1.1.1
 ```
 **Output Preview:**
-* **ISP:** Cloudflare, Inc.
-* **Location:** -33.4940, 143.2104
-* **Result written to file:** `ip_1_1_1_1.txt`
+```bash
+ISP: Cloudflare, Inc.
+Location: -33.4940, 143.2104
+Result written to file: `ip_1_1_1_1.txt`
+```
 
 #### 3. Social Media Username Probing
 ```bash
 go run . -un @recyclops
 ```
 **Output Preview:**
-* **Second Life:** yes
-* **X:** no
-* **LinkedIn:** no
-* **Instagram:** no
-* **GitHub:** no
-* **Result written to file:** `un_recyclops.txt`
-
+```bash
+Second Life: yes
+X: no
+Youtube: no
+Instagram: no
+GitHub: no
+Result written to file: `un_recyclops.txt`
+```
 ## 🔐 Security & API Configuration
 
 The application securely interfaces with external data sources without exposing proprietary credentials inside the version control history:

@@ -6,9 +6,9 @@ Use this template to add you own custom item in the FullnameJSON_template.md
     "status": "",
     "timestamp_utc": "",
     "person": {
-      "full_name": "",
-      "birth_year": 0000,
-      "current_location": "" <---Your location here
+      "full_name": "", <---repeat name here (you can add second names if you want)
+      "birth_year": 1000,
+      "current_location": ""
     },
     "scraped_sources": [
       {
@@ -19,7 +19,7 @@ Use this template to add you own custom item in the FullnameJSON_template.md
       {
         "source_type": "",
         "source_name": "",
-        "address": { <--- Your address info here
+        "address": { <--- Your address info here below
           "street": "",
           "postal_code": "",
           "city": ""

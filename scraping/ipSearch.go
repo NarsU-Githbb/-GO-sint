@@ -7,25 +7,30 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"os"
 	"time"
 
 	"golang.org/x/time/rate"
 )
+
+// ip-api.com allows 45 requests per minute maximum
+// ipwhois & abuseipdb 1,000 request per day
 
 type IpScraper struct {
 	client         *http.Client
 	ipApiLimiter   *rate.Limiter
 	ipWhoIsLimiter *rate.Limiter
 	ipAbuseLimiter *rate.Limiter
+	abuseApiKey    string
 }
 
 func NewIpScraper() *IpScraper {
 	return &IpScraper{
-		client: &http.Client{Timeout: 5 * time.Second},
-		// ip-api.com allows 45 requests per minute maximum - check others
+		client:         &http.Client{Timeout: 5 * time.Second},
 		ipApiLimiter:   rate.NewLimiter(rate.Every(2*time.Second), 1),
 		ipWhoIsLimiter: rate.NewLimiter(rate.Every(2*time.Second), 1),
 		ipAbuseLimiter: rate.NewLimiter(rate.Every(2*time.Second), 1),
+		abuseApiKey:    os.Getenv("ABUSEIPDB_API_KEY"),
 	}
 }
 
@@ -103,7 +108,7 @@ func (scrp *IpScraper) IpWhoIsCheck(ctx context.Context, ip string) (*models.IpW
 
 func (scrp *IpScraper) IpAbuseCheck(ctx context.Context, ip string) (*models.IPAbuseReport, error) {
 
-	url := fmt.Sprintf("https://api.abuseipdb.com/api/v2//check?ipAddress=%s", ip)
+	url := fmt.Sprintf("https://api.abuseipdb.com/api/v2/check?ipAddress=%s", ip)
 
 	if err := scrp.ipAbuseLimiter.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter error: %w", err)
@@ -113,6 +118,8 @@ func (scrp *IpScraper) IpAbuseCheck(ctx context.Context, ip string) (*models.IPA
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Set("Key", scrp.abuseApiKey)
 
 	resp, err := scrp.client.Do(req)
 	if err != nil {
@@ -157,11 +164,17 @@ func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.I
 			fmt.Sprintf("IPWhoIs lookup failed: %v", err))
 	}
 
-	ipAbuseResult, err := scrp.IpAbuseCheck(ctx, ip)
-	if err != nil || ipAbuseResult == nil {
-		failCount++
-		failures = append(failures,
-			fmt.Sprintf("AbuseIPDB lookup failed: %v", err))
+	var ipAbuseResult *models.IPAbuseReport
+
+	if scrp.abuseApiKey != "" {
+		ipAbuseResult, err = scrp.IpAbuseCheck(ctx, ip)
+		if err != nil || ipAbuseResult == nil {
+			failCount++
+			failures = append(failures,
+				fmt.Sprintf("AbuseIPDB lookup failed: %v", err))
+		}
+	} else {
+		fmt.Println("AbuseIPDB skipped: API key not configured")
 	}
 
 	if failCount > 1 {
@@ -191,8 +204,8 @@ func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.I
 		isp = ipWhoIsResult.ISP
 	}
 
-	// Define a threshold allowance for float comparison (approx. 1.1 meters)
-	const allowedDelta = 0.00001
+	//threshold of 55.6 km
+	const allowedDelta = 0.5
 
 	if ipApiResult != nil && ipWhoIsResult != nil && ipApiResult.Lat != 0.0 && ipWhoIsResult.Lat != 0.0 {
 		if math.Abs(ipApiResult.Lat-ipWhoIsResult.Lat) <= allowedDelta {
@@ -243,7 +256,7 @@ func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.I
 
 	var acs *int
 	var tr *int
-	var lra string
+	lra := "Not searched"
 
 	if ipAbuseResult != nil {
 		acs = ipAbuseResult.AbuseConfidenceScore

@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -17,6 +19,10 @@ var (
 )
 
 func main() {
+	// Load environment variables from .env
+	if err := godotenv.Load(); err != nil {
+		fmt.Fprintln(os.Stderr, "Warning: .env file not found; using system environment variables")
+	}
 
 	//context is needed so that the program doesn't secretly keep going even after ctrl + C
 
@@ -62,12 +68,17 @@ func main() {
 		fileName := fmt.Sprintf("n_%s.txt", makeFilename)
 		fileContent := CreateFullOutput(argument, result, fileName)
 
-		err = WriteOutput(fileName, fileContent)
+		fmt.Println("--- TEST OUTPUT START ---")
+		fmt.Printf("Target Filename: %s\n", fileName)
+		fmt.Println(fileContent)
+		fmt.Println("--- TEST OUTPUT END ---")
+
+		/* err = WriteOutput(fileName, fileContent)
 		if err != nil {
 			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
 			fmt.Printf("Result successfully written to file: %s\n", fileName)
-		}
+		}*/
 
 	case *ipSearch != "":
 		argument = *ipSearch
@@ -81,12 +92,17 @@ func main() {
 		fileName := fmt.Sprintf("ip_%s.txt", makeFilename)
 		fileContent := CreateIPOutput(argument, result, fileName)
 
-		err = WriteOutput(fileName, fileContent)
+		fmt.Println("--- TEST OUTPUT START ---")
+		fmt.Printf("Target Filename: %s\n", fileName)
+		fmt.Println(fileContent)
+		fmt.Println("--- TEST OUTPUT END ---")
+
+		/* err = WriteOutput(fileName, fileContent)
 		if err != nil {
 			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
 			fmt.Printf("Result successfully written to file: %s\n", fileName)
-		}
+		} */
 
 	case *usernameSearch != "":
 		argument = *usernameSearch
@@ -102,12 +118,17 @@ func main() {
 
 		fileContent := CreateUsernameOutput(argument, result, fileName)
 
-		err = WriteOutput(fileName, fileContent)
+		fmt.Println("--- TEST OUTPUT START ---")
+		fmt.Printf("Target Filename: %s\n", fileName)
+		fmt.Println(fileContent)
+		fmt.Println("--- TEST OUTPUT END ---")
+
+		/* err = WriteOutput(fileName, fileContent)
 		if err != nil {
 			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
 			fmt.Printf("Result successfully written to file: %s\n", fileName)
-		}
+		}*/
 	}
 
 }
@@ -149,19 +170,25 @@ func printHelp() {
 	fmt.Println(bold + "Phone Number:" + reset + " 308-826-5962")
 	fmt.Println(bold + "Result written to file:" + reset + "n_dwight_schrute.txt")
 	fmt.Println()
-	fmt.Println(bold + "2. go run . " + blue + " -ip 192.168.1.1" + reset)
+	fmt.Println(bold + "2. go run . " + blue + " -ip 8.8.8.1" + reset)
 	fmt.Println()
-	fmt.Println(bold + "ISP:" + reset + " Dunder Mifflin")
-	fmt.Println(bold + "Location:" + reset + " 34.210766, -118.436440")
-	fmt.Println(bold + "Result written to file:" + reset + " ip_192_168_1_1.txt")
+	fmt.Println(bold + "IP:" + reset + " 8.8.8.1")
+	fmt.Println(bold + "ISP:" + reset + " Google LLC")
+	fmt.Println(bold + "Location:" + reset + " 37.422000,-122.085000")
+	fmt.Println(bold + "Validated:" + reset + " true")
+	fmt.Println(bold + "Warnings:" + reset + " None")
+	fmt.Println(bold + "Abuse Confidence Score:" + reset + " Not available")
+	fmt.Println(bold + "Total Reports:" + reset + " Not available")
+	fmt.Println(bold + "Last Reported At:" + reset + " Not searched")
+	fmt.Println(bold + "Result written to file:" + reset + " ip_8_8_8_1.txt")
 	fmt.Println()
-	fmt.Println(bold + "3. go run go run . " + blue + "-un @recyclops" + reset)
+	fmt.Println(bold + "3. go run . " + blue + "-un torvalds" + reset)
 	fmt.Println()
-	fmt.Println(bold + "Second Life:" + reset + " yes")
-	fmt.Println(bold + "X:" + reset + " no")
-	fmt.Println(bold + "LinkedIn:" + reset + " no")
-	fmt.Println(bold + "Instagram:" + reset + " no")
-	fmt.Println(bold + "Github:" + reset + " no")
-	fmt.Println(bold + "Result written to file:" + reset + " un_recyclops.txt")
+	fmt.Println(bold + "X:" + reset + " true")
+	fmt.Println(bold + "Youtube:" + reset + " false")
+	fmt.Println(bold + "Soundcloud:" + reset + " true")
+	fmt.Println(bold + "Github:" + reset + " true")
+	fmt.Println(bold + "Gitea:" + reset + " true")
+	fmt.Println(bold + "Result written to file:" + reset + " un_torvalds.txt")
 	fmt.Println()
 }

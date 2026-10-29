@@ -55,7 +55,7 @@ type FnScraper struct {
 }
 
 func NewFnScraper() *FnScraper {
-	jsonPath := "fullname_mockAPI.json"
+	jsonPath := "scraping/Fullname_mockAPI.json"
 	return &FnScraper{
 		mockLimiter:  rate.NewLimiter(rate.Every(1*time.Second), 1),
 		mockDataPath: jsonPath,
@@ -141,8 +141,12 @@ func (scrp *FnScraper) SimulatedFnCheck(ctx context.Context, fullName string) (*
 func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (models.FullModel, error) {
 
 	profilePointer, err := scrp.SimulatedFnCheck(ctx, fullName)
-	if err != nil || profilePointer == nil {
-		names := strings.Fields(fullName)
+	if err != nil {
+		return models.FullModel{}, err
+	}
+
+	if profilePointer == nil {
+		names := strings.Fields(strings.TrimSpace(fullName))
 
 		firstName := ""
 		lastName := ""
@@ -150,12 +154,10 @@ func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (
 		if len(names) > 0 {
 			firstName = names[0]
 		}
-
 		if len(names) > 1 {
 			lastName = names[len(names)-1]
 		}
 
-		// Return the fallback model with "not found!" placeholders
 		return models.FullModel{
 			FirstName: firstName,
 			LastName:  lastName,
@@ -168,6 +170,5 @@ func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (
 		}, nil
 	}
 
-	result := *profilePointer
-	return result, nil
+	return *profilePointer, nil
 }

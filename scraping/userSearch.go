@@ -11,27 +11,26 @@ import (
 )
 
 type UnScraper struct {
-	client            *http.Client
-	secondLifeLimiter *rate.Limiter
-	xLimiter          *rate.Limiter
-	linkedInLimiter   *rate.Limiter
-	instagramLimiter  *rate.Limiter
-	githubLimiter     *rate.Limiter
+	client         *http.Client
+	xLimiter       *rate.Limiter
+	youtubeLimiter *rate.Limiter
+	scLimiter      *rate.Limiter
+	githubLimiter  *rate.Limiter
+	giteaLimiter   *rate.Limiter
 }
 
 func NewUnScraper() *UnScraper {
 	return &UnScraper{
 		client: &http.Client{
-			// Always assign a reasonable timeout so CLI tool doesn't hang indefinitely
 			Timeout: 7 * time.Second,
 		},
 
-		// find the CORRECT cooldown time for every platform
-		secondLifeLimiter: rate.NewLimiter(rate.Limit(5), 5),
-		xLimiter:          rate.NewLimiter(rate.Every(2*time.Second), 1),
-		linkedInLimiter:   rate.NewLimiter(rate.Every(2*time.Second), 1),
-		instagramLimiter:  rate.NewLimiter(rate.Every(1*time.Second), 1),
-		githubLimiter:     rate.NewLimiter(rate.Limit(3), 3),
+		// Conservative local pacing defaults - These are not official platform limits.
+		xLimiter:       rate.NewLimiter(rate.Every(3*time.Second), 1),
+		youtubeLimiter: rate.NewLimiter(rate.Every(3*time.Second), 1),
+		scLimiter:      rate.NewLimiter(rate.Every(3*time.Second), 1),
+		githubLimiter:  rate.NewLimiter(rate.Every(time.Minute), 1),
+		giteaLimiter:   rate.NewLimiter(rate.Every(3*time.Second), 1),
 	}
 }
 
@@ -46,13 +45,8 @@ func (scrp *UnScraper) prepareRequest(ctx context.Context, url string) (*http.Re
 	return req, nil
 }
 
-func (scrp *UnScraper) SecondLifeCheck(ctx context.Context, username string) (bool, error) {
-
-	url := fmt.Sprintf("https://my.secondlife.com/%s", username)
-
-	//Wait for the rate limiter before making the request
-
-	if err := scrp.secondLifeLimiter.Wait(ctx); err != nil {
+func (scrp *UnScraper) checkPlatform(ctx context.Context, limiter *rate.Limiter, url string) (bool, error) {
+	if err := limiter.Wait(ctx); err != nil {
 		return false, fmt.Errorf("rate limiter error: %w", err)
 	}
 
@@ -61,17 +55,16 @@ func (scrp *UnScraper) SecondLifeCheck(ctx context.Context, username string) (bo
 		return false, err
 	}
 
-	// Execute the request
 	resp, err := scrp.client.Do(req)
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close() // Protect against resource/connection leaks
+	defer resp.Body.Close()
 
 	switch resp.StatusCode {
-	case http.StatusOK: // 200
+	case http.StatusOK:
 		return true, nil
-	case http.StatusNotFound: // 404
+	case http.StatusNotFound:
 		return false, nil
 	default:
 		return false, fmt.Errorf("unexpected response status: %d", resp.StatusCode)
@@ -79,135 +72,66 @@ func (scrp *UnScraper) SecondLifeCheck(ctx context.Context, username string) (bo
 }
 
 func (scrp *UnScraper) XCheck(ctx context.Context, username string) (bool, error) {
-	url := fmt.Sprintf("https://x.com/%s", username)
-
-	if err := scrp.xLimiter.Wait(ctx); err != nil {
-		return false, fmt.Errorf("rate limiter error: %w", err)
-	}
-
-	req, err := scrp.prepareRequest(ctx, url)
-	if err != nil {
-		return false, err
-	}
-
-	resp, err := scrp.client.Do(req)
-	if err != nil {
-		return false, err
-	}
-
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return true, nil
-	case http.StatusNotFound:
-		return false, nil
-	default:
-		return false, fmt.Errorf("unexpected response status: %d", resp.StatusCode)
-	}
+	return scrp.checkPlatform(ctx, scrp.xLimiter, fmt.Sprintf("https://x.com/%s", username))
 }
 
-func (scrp *UnScraper) LinkedInCheck(ctx context.Context, username string) (bool, error) {
-	url := fmt.Sprintf("https://linkedin.com/in/%s", username)
-
-	if err := scrp.linkedInLimiter.Wait(ctx); err != nil {
-		return false, fmt.Errorf("rate limiter error: %w", err)
-	}
-
-	req, err := scrp.prepareRequest(ctx, url)
-	if err != nil {
-		return false, err
-	}
-
-	resp, err := scrp.client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return true, nil
-	case http.StatusNotFound:
-		return false, nil
-	case 999: //find similar specific error codes for other platforms
-		return false, fmt.Errorf("blocked by LinkedIn anti-scraping wall (Status 999)")
-	default:
-		return false, fmt.Errorf("unexpected response status: %d", resp.StatusCode)
-	}
+func (scrp *UnScraper) YoutubeCheck(ctx context.Context, username string) (bool, error) {
+	return scrp.checkPlatform(ctx, scrp.youtubeLimiter, fmt.Sprintf("https://www.youtube.com/user/%s", username))
 }
 
-func (scrp *UnScraper) InstagramCheck(ctx context.Context, username string) (bool, error) {
-	url := fmt.Sprintf("https://www.instagram.com/%s", username)
-
-	if err := scrp.instagramLimiter.Wait(ctx); err != nil {
-		return false, fmt.Errorf("rate limiter error: %w", err)
-	}
-
-	req, err := scrp.prepareRequest(ctx, url)
-	if err != nil {
-		return false, err
-	}
-
-	resp, err := scrp.client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return true, nil
-	case http.StatusNotFound:
-		return false, nil
-
-	default:
-		return false, fmt.Errorf("unexpected response status: %d", resp.StatusCode)
-	}
+func (scrp *UnScraper) SoundcloudCheck(ctx context.Context, username string) (bool, error) {
+	return scrp.checkPlatform(ctx, scrp.scLimiter, fmt.Sprintf("https://soundcloud.com/%s", username))
 }
 
 func (scrp *UnScraper) GithubCheck(ctx context.Context, username string) (bool, error) {
-	url := fmt.Sprintf("https://github.com/%s", username)
+	return scrp.checkPlatform(ctx, scrp.githubLimiter, fmt.Sprintf("https://github.com/%s", username))
+}
 
-	if err := scrp.githubLimiter.Wait(ctx); err != nil {
-		return false, fmt.Errorf("rate limiter error: %w", err)
-	}
-
-	req, err := scrp.prepareRequest(ctx, url)
-	if err != nil {
-		return false, err
-	}
-
-	resp, err := scrp.client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return true, nil
-	case http.StatusNotFound:
-		return false, nil
-	default:
-		return false, fmt.Errorf("unexpected response status: %d", resp.StatusCode)
-	}
+func (scrp *UnScraper) GiteaCheck(ctx context.Context, username string) (bool, error) {
+	return scrp.checkPlatform(ctx, scrp.giteaLimiter, fmt.Sprintf("https://gitea.com/%s", username))
 }
 
 func (scrp *UnScraper) ExecuteUsernameSearch(ctx context.Context, username string) (models.UserModel, error) {
 
-	secondLife, _ := scrp.SecondLifeCheck(ctx, username)
-	x, _ := scrp.XCheck(ctx, username)
-	linkedin, _ := scrp.LinkedInCheck(ctx, username)
-	instagram, _ := scrp.InstagramCheck(ctx, username)
-	github, _ := scrp.GithubCheck(ctx, username)
+	var failures []string
+
+	// If the context is already canceled, bail out early
+	if err := ctx.Err(); err != nil {
+		return models.UserModel{}, err
+	}
+
+	x, err := scrp.XCheck(ctx, username)
+	if err != nil {
+		failures = append(failures, fmt.Sprintf("xCheck failed! %s", err))
+	}
+
+	youtube, err := scrp.YoutubeCheck(ctx, username)
+	if err != nil {
+		failures = append(failures, fmt.Sprintf("YoutubeCheck failed! %s", err))
+	}
+
+	soundcloud, err := scrp.SoundcloudCheck(ctx, username)
+	if err != nil {
+		failures = append(failures, fmt.Sprintf("SoundcloudCheck failed! %s", err))
+	}
+
+	github, err := scrp.GithubCheck(ctx, username)
+	if err != nil {
+		failures = append(failures, fmt.Sprintf("GithubCheck failed! %s", err))
+	}
+
+	gitea, err := scrp.GiteaCheck(ctx, username)
+	if err != nil {
+		failures = append(failures, fmt.Sprintf("GiteaCheck failed! %s", err))
+	}
 
 	result := models.UserModel{
-		SecondLife: secondLife,
 		X:          x,
-		LinkedIn:   linkedin,
-		Instagram:  instagram,
+		Youtube:    youtube,
+		Soundcloud: soundcloud,
 		Github:     github,
+		Gitea:      gitea,
+		Errors:     failures,
 	}
 
 	return result, nil
