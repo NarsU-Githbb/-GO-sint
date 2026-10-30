@@ -16,6 +16,7 @@ var (
 	fullSearch     = flag.String("n", "", "Performs a full-name search.")
 	ipSearch       = flag.String("ip", "", "Performs a IP search.")
 	usernameSearch = flag.String("un", "", "Performs a username search.")
+	rawOutput      = flag.Bool("raw", false, "Outputs raw results.")
 )
 
 func main() {
@@ -43,7 +44,7 @@ func main() {
 		activeFlags++
 	}
 
-	if activeFlags != 1 { //allow just one for now, but change if decide to do multi-input
+	if activeFlags != 1 {
 		printHelp()
 		os.Exit(1)
 	}
@@ -64,21 +65,34 @@ func main() {
 			os.Exit(1)
 		}
 
-		makeFilename := createFileName(argument)
-		fileName := fmt.Sprintf("n_%s.txt", makeFilename)
-		fileContent := CreateFullOutput(argument, result, fileName)
+		if *rawOutput {
+			// Raw output
+			makeRawFilename := createFileName(argument)
+			rawFileName := fmt.Sprintf("raw_n_%s.txt", makeRawFilename)
+			rawFileContent := CreateRawFullOutput(result.Raw, rawFileName)
 
-		fmt.Println("--- TEST OUTPUT START ---")
-		fmt.Printf("Target Filename: %s\n", fileName)
-		fmt.Println(fileContent)
-		fmt.Println("--- TEST OUTPUT END ---")
+			err = WriteOutput(rawFileName, rawFileContent)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing raw results: %v\n", err)
+			} else {
+				fmt.Printf("Raw results written to file: %s\n", rawFileName)
+			}
 
-		/* err = WriteOutput(fileName, fileContent)
-		if err != nil {
-			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
-			fmt.Printf("Result successfully written to file: %s\n", fileName)
-		}*/
+			// Normal output
+			makeFilename := createFileName(argument)
+			fileName := fmt.Sprintf("n_%s.txt", makeFilename)
+			fileContent := CreateFullOutput(argument, result.Summary, fileName)
+
+			fmt.Println(fileContent)
+
+			err = WriteOutput(fileName, fileContent)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing results: %v\n", err)
+			} else {
+				fmt.Printf("Results written to file: %s\n", fileName)
+			}
+		}
 
 	case *ipSearch != "":
 		argument = *ipSearch
@@ -88,21 +102,38 @@ func main() {
 			fmt.Fprintf(os.Stderr, "IP search failed: %v\n", err)
 			os.Exit(1)
 		}
-		makeFilename := createFileName(argument)
-		fileName := fmt.Sprintf("ip_%s.txt", makeFilename)
-		fileContent := CreateIPOutput(argument, result, fileName)
 
-		fmt.Println("--- TEST OUTPUT START ---")
-		fmt.Printf("Target Filename: %s\n", fileName)
-		fmt.Println(fileContent)
-		fmt.Println("--- TEST OUTPUT END ---")
+		if *rawOutput {
+			// Raw output
+			makeRawFilename := createFileName(argument)
+			rawFileName := fmt.Sprintf("raw_n_%s.txt", makeRawFilename)
+			rawFileContent := CreateRawIPOutput(result.Raw, rawFileName)
 
-		/* err = WriteOutput(fileName, fileContent)
-		if err != nil {
-			fmt.Printf("Error writing results to file: %v\n", err)
+			err = WriteOutput(rawFileName, rawFileContent)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing raw results: %v\n", err)
+			} else {
+				fmt.Printf("Raw results written to file: %s\n", rawFileName)
+			}
+
 		} else {
-			fmt.Printf("Result successfully written to file: %s\n", fileName)
-		} */
+			// Normal output
+			makeFilename := createFileName(argument)
+			fileName := fmt.Sprintf("ip_%s.txt", makeFilename)
+			fileContent := CreateIPOutput(argument, result.Summary, fileName)
+
+			fmt.Println("--- TEST OUTPUT START ---")
+			fmt.Printf("Target Filename: %s\n", fileName)
+			fmt.Println(fileContent)
+			fmt.Println("--- TEST OUTPUT END ---")
+
+			err = WriteOutput(fileName, fileContent)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing results: %v\n", err)
+			} else {
+				fmt.Printf("Results written to file: %s\n", fileName)
+			}
+		}
 
 	case *usernameSearch != "":
 		argument = *usernameSearch
@@ -123,12 +154,12 @@ func main() {
 		fmt.Println(fileContent)
 		fmt.Println("--- TEST OUTPUT END ---")
 
-		/* err = WriteOutput(fileName, fileContent)
+		err = WriteOutput(fileName, fileContent)
 		if err != nil {
 			fmt.Printf("Error writing results to file: %v\n", err)
 		} else {
 			fmt.Printf("Result successfully written to file: %s\n", fileName)
-		}*/
+		}
 	}
 
 }
@@ -156,6 +187,7 @@ func printHelp() {
 	fmt.Println("  " + green + "-n" + reset + "      Performs a full-name search.")
 	fmt.Println("  " + green + "-ip" + reset + "      Performs a IP search.")
 	fmt.Println("  " + green + "-un" + reset + "      Performs a username search.")
+	fmt.Println("  " + green + "-raw" + reset + "      Returns raw API responses (add before -n or -ip flag).")
 	fmt.Println()
 
 	fmt.Println()

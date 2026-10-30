@@ -2,6 +2,11 @@ package models
 
 // Mimics the FAKE mock_profiles.json schema
 
+type FnSearchResults struct {
+	Summary FullModel   `json:"summary"`
+	Raw     MockProfile `json:"raw"`
+}
+
 type MockProfile struct {
 	SearchQuery string `json:"search_query"`
 	Status      string `json:"status"`

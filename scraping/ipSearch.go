@@ -138,7 +138,7 @@ func (scrp *IpScraper) IpAbuseCheck(ctx context.Context, ip string) (*models.IPA
 	return &response.Data, nil
 }
 
-func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.IPModel, error) {
+func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.IPSearchResults, error) {
 
 	var failures []string
 	var failCount int
@@ -178,11 +178,19 @@ func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.I
 	}
 
 	if failCount > 1 {
-		return models.IPModel{
-			IP:          ip,
-			IsValidated: false,
-			Warning:     differences,
-		}, fmt.Errorf("IP search failed: too many api lookups failed!")
+		return models.IPSearchResults{
+			Summary: models.IPModel{
+				IP:          ip,
+				IsValidated: false,
+				Warning:     differences,
+				Errors:      failures,
+			},
+			Raw: models.RawIPResults{
+				IPAPI:   ipApiResult,
+				IPWhoIs: ipWhoIsResult,
+				AbuseIP: ipAbuseResult,
+			},
+		}, fmt.Errorf("IP search failed: too many API lookups failed!")
 	}
 
 	if ipApiResult != nil && ipWhoIsResult != nil && ipApiResult.ISP != "" && ipWhoIsResult.ISP != "" {
@@ -264,16 +272,23 @@ func (scrp *IpScraper) ExecuteIPSearch(ctx context.Context, ip string) (models.I
 		lra = ipAbuseResult.LastReportedAt
 	}
 
-	return models.IPModel{
-		IP:                   ip,
-		ISP:                  isp,
-		Location:             location,
-		IsValidated:          confirmation,
-		Warning:              differences,
-		AbuseConfidenceScore: acs,
-		TotalReports:         tr,
-		LastReportedAt:       lra,
-		Errors:               failures,
+	return models.IPSearchResults{
+		Summary: models.IPModel{
+			IP:                   ip,
+			ISP:                  isp,
+			Location:             location,
+			IsValidated:          confirmation,
+			Warning:              differences,
+			AbuseConfidenceScore: acs,
+			TotalReports:         tr,
+			LastReportedAt:       lra,
+			Errors:               failures,
+		},
+		Raw: models.RawIPResults{
+			IPAPI:   ipApiResult,
+			IPWhoIs: ipWhoIsResult,
+			AbuseIP: ipAbuseResult,
+		},
 	}, nil
 
 }

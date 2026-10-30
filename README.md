@@ -11,7 +11,38 @@ Before you get started, you should read this documentation to understand the pro
 * [CIA Triad](docs/cia_triad.md.md).
 * [Data Gathering Documentation](docs/data-gathering.md).
 
-## 🚀 How to Install and Run
+## Docker Deployment and Execution
+
+The project is a Go-based command-line application and does not require a graphical user interface or frontend.
+
+Docker is used to containerize the application and simplify deployment. A multi-stage Dockerfile automatically builds the Go executable and packages it into a lightweight runtime image.
+
+**The repository includes:**
+
+* A Dockerfile to build and package the application.
+* A docker-run.sh script to build and execute the application with a single command.
+* A .dockerignore file to optimize the Docker build context.
+
+**Execution:**
+
+
+```bash
+./docker-run.sh --help
+```
+
+Example:
+
+```bash
+./docker-run.sh -n "Dwight Schrute"
+```
+
+Only Docker is required on the host machine. Go, project dependencies, and compilation are handled automatically inside Docker.
+
+Generated reports can be persisted on the host machine using a Docker volume mount.
+
+Since this is a CLI application, no frontend, graphical interface, or separate application service is necessary.
+
+## 🚀 How to Install and Run (Without Docker)
 
 ### 1. Prerequisites
 

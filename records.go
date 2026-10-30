@@ -4,6 +4,7 @@ import (
 	"digital_detective/models"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -38,102 +39,262 @@ func createFileName(argument string) string {
 
 }
 
+func statusIcon(ok bool) string {
+	if ok {
+		return "[+]"
+	}
+	return "[-]"
+}
+
+func asciiBar(value, max, width int) string {
+	if max <= 0 || width <= 0 {
+		return "[" + strings.Repeat(".", maxInt(width, 0)) + "]"
+	}
+
+	if value < 0 {
+		value = 0
+	}
+	if value > max {
+		value = max
+	}
+
+	filled := value * width / max
+
+	return "[" +
+		strings.Repeat("#", filled) +
+		strings.Repeat(".", width-filled) +
+		"]"
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func CreateFullOutput(fullname string, result models.FullModel, filename string) string {
 
-	output := fmt.Sprintf("--- Scan Results for %s ---\n", fullname)
-	output += fmt.Sprintf("First Name: %s\n", result.FirstName)
-	output += fmt.Sprintf("Last Name: %s\n", result.LastName)
-	output += fmt.Sprintf(
-		"Address: %s, %s, %s\n",
-		result.Address.Street,
-		result.Address.PostalCode,
-		result.Address.City,
-	)
-	output += fmt.Sprintf("Phone Number: %s\n", result.PhoneNumber)
-	output += fmt.Sprintf("Result written to file:      %s\n\n", filename)
+	var output strings.Builder
 
-	return output
+	output.WriteString("============================================\n")
+	output.WriteString("           (G)OSINT CLI TOOL              \n")
+	output.WriteString("                PERSON SCAN                \n")
+	output.WriteString("============================================\n\n")
+
+	fmt.Fprintf(&output, "  Target: %s\n\n", fullname)
+
+	output.WriteString("  PROFILE DETAILS\n")
+	output.WriteString("  ------------------------------------------\n")
+	fmt.Fprintf(&output, "  First Name: %s\n", result.FirstName)
+	fmt.Fprintf(&output, "  Last Name:  %s\n", result.LastName)
+
+	output.WriteString("\n  ADDRESS\n")
+	output.WriteString("  ------------------------------------------\n")
+	fmt.Fprintf(&output, "  Street: %s\n", result.Address.Street)
+	fmt.Fprintf(&output, "  Postal: %s\n", result.Address.PostalCode)
+	fmt.Fprintf(&output, "  City:   %s\n", result.Address.City)
+
+	output.WriteString("\n  CONTACT\n")
+	output.WriteString("  ------------------------------------------\n")
+	fmt.Fprintf(&output, "  Phone: %s\n", result.PhoneNumber)
+
+	output.WriteString("\n============================================\n")
+	fmt.Fprintf(&output, "  Output: %s\n", filename)
+	output.WriteString("============================================\n\n")
+
+	return output.String()
 }
 
 func CreateIPOutput(IP string, result models.IPModel, filename string) string {
 
-	output := fmt.Sprintf("--- Scan Results for @%s ---\n", IP)
-	output += fmt.Sprintf("IP: %s\n", result.IP)
-	output += fmt.Sprintf("ISP: %s\n", result.ISP)
-	output += fmt.Sprintf("Location: %.6f,%.6f\n",
-		result.Location.Latitude,
-		result.Location.Longitude)
-	output += fmt.Sprintf("Validated: %t\n", result.IsValidated)
-	output += "Warnings:\n"
-	if len(result.Warning) == 0 {
-		output += "  None\n"
-	} else {
-		for _, war := range result.Warning {
-			output += fmt.Sprintf("  - %s\n", war)
-		}
-	}
+	var output strings.Builder
 
-	// AbuseIPDB fields are optional.
+	output.WriteString("============================================\n")
+	output.WriteString("           (G)OSINT CLI TOOL               \n")
+	output.WriteString("                 IP SCAN                   \n")
+	output.WriteString("============================================\n\n")
+
+	// Target information
+	output.WriteString("  TARGET INFORMATION\n")
+	output.WriteString("  ------------------------------------------\n")
+	fmt.Fprintf(&output, "  Target:      %s\n", IP)
+	fmt.Fprintf(&output, "  IP Address:  %s\n", result.IP)
+	fmt.Fprintf(&output, "  ISP:         %s\n", result.ISP)
+	fmt.Fprintf(
+		&output,
+		"  Coordinates: %.6f, %.6f\n",
+		result.Location.Latitude,
+		result.Location.Longitude,
+	)
+
+	// Validation
+	output.WriteString("\n  VALIDATION\n")
+	output.WriteString("  ------------------------------------------\n")
+	fmt.Fprintf(
+		&output,
+		"  Status: %s\n",
+		map[bool]string{
+			true:  "[+] Validated",
+			false: "[-] Not validated",
+		}[result.IsValidated],
+	)
+
+	// Abuse assessment
+	output.WriteString("\n  ABUSE ASSESSMENT\n")
+	output.WriteString("  ------------------------------------------\n")
 
 	if result.AbuseConfidenceScore != nil {
-		output += fmt.Sprintf("Abuse Confidence Score: %d\n", *result.AbuseConfidenceScore)
+		score := *result.AbuseConfidenceScore
+
+		fmt.Fprintf(
+			&output,
+			"  Confidence: %s %d/100\n",
+			asciiBar(score, 100, 20),
+			score,
+		)
 	} else {
-		output += "Abuse Confidence Score: Not available\n"
+		output.WriteString("  Confidence: Not available\n")
 	}
 
 	if result.TotalReports != nil {
-		output += fmt.Sprintf("Total Reports: %d\n", *result.TotalReports)
+		fmt.Fprintf(&output, "  Total Reports: %d\n", *result.TotalReports)
 	} else {
-		output += "Total Reports: Not available\n"
+		output.WriteString("  Total Reports: Not available\n")
 	}
 
 	if result.LastReportedAt != "" {
-		output += fmt.Sprintf("Last Reported At: %s\n", result.LastReportedAt)
+		fmt.Fprintf(
+			&output,
+			"  Last Reported: %s\n",
+			result.LastReportedAt,
+		)
 	} else {
-		output += "Last Reported At: Not available\n"
+		output.WriteString("  Last Reported: Not available\n")
 	}
 
-	output += "Errors:\n"
-	if len(result.Errors) == 0 {
-		output += "  None\n"
+	// Warnings
+	output.WriteString("\n  WARNINGS\n")
+	output.WriteString("  ------------------------------------------\n")
+
+	if len(result.Warning) == 0 {
+		output.WriteString("  [+] No warnings\n")
 	} else {
-		for _, er := range result.Errors {
-			output += fmt.Sprintf("  - %s\n", er)
+		for _, warning := range result.Warning {
+			fmt.Fprintf(&output, "  [!] %s\n", warning)
 		}
 	}
 
-	output += fmt.Sprintf("Result written to file:      %s\n\n", filename)
+	// Errors
+	output.WriteString("\n  ERRORS\n")
+	output.WriteString("  ------------------------------------------\n")
 
-	return output
+	if len(result.Errors) == 0 {
+		output.WriteString("  [+] No errors\n")
+	} else {
+		for _, errMsg := range result.Errors {
+			fmt.Fprintf(&output, "  [-] %s\n", errMsg)
+		}
+	}
+
+	// Footer
+	output.WriteString("\n============================================\n")
+	fmt.Fprintf(&output, "  Output: %s\n", filename)
+	output.WriteString("============================================\n\n")
+
+	return output.String()
 }
 
 func CreateUsernameOutput(username string, result models.UserModel, filename string) string {
 
-	output := fmt.Sprintf("--- Scan Results for @%s ---\n", username)
-	output += fmt.Sprintf("X:           %t\n", result.X)
-	output += fmt.Sprintf("Youtube:    %t\n", result.Youtube)
-	output += fmt.Sprintf("Soundcloud: %t\n", result.Soundcloud)
-	output += fmt.Sprintf("Github:      %t\n", result.Github)
-	output += fmt.Sprintf("Gitea:   %t\n", result.Gitea)
-	output += "Errors:\n"
+	platforms := []struct {
+		name  string
+		found bool
+	}{
+		{"X", result.X},
+		{"YouTube", result.Youtube},
+		{"SoundCloud", result.Soundcloud},
+		{"GitHub", result.Github},
+		{"Gitea", result.Gitea},
+	}
+
+	found := 0
+	var output strings.Builder
+
+	output.WriteString("============================================\n")
+	output.WriteString("           (G)OSINT CLI TOOL               \n")
+	output.WriteString("              USERNAME SCAN                \n")
+	output.WriteString("============================================\n\n")
+
+	fmt.Fprintf(&output, "  Target: @%s\n\n", username)
+	output.WriteString("  PLATFORM PRESENCE\n")
+	output.WriteString("  ------------------------------------------\n")
+
+	for _, platform := range platforms {
+		label := "NOT FOUND"
+		if platform.found {
+			label = "FOUND"
+			found++
+		}
+
+		fmt.Fprintf(
+			&output,
+			"  %-12s %-3s %s\n",
+			platform.name,
+			statusIcon(platform.found),
+			label,
+		)
+	}
+
+	total := len(platforms)
+	percentage := 0
+	if total > 0 {
+		percentage = found * 100 / total
+	}
+
+	output.WriteString("\n  SCAN SUMMARY\n")
+	output.WriteString("  ------------------------------------------\n")
+	fmt.Fprintf(
+		&output,
+		"  Found:    %s %d/%d\n",
+		asciiBar(found, total, 20),
+		found,
+		total,
+	)
+	fmt.Fprintf(&output, "  Coverage: %d%%\n", percentage)
+
+	output.WriteString("\n  ERRORS\n")
+	output.WriteString("  ------------------------------------------\n")
+
 	if len(result.Errors) == 0 {
-		output += "  None\n"
+		output.WriteString("  [+] No errors\n")
 	} else {
-		for _, er := range result.Errors {
-			output += fmt.Sprintf("  - %s\n", er)
+		for _, errMsg := range result.Errors {
+			fmt.Fprintf(&output, "  [-] %s\n", errMsg)
 		}
 	}
-	output += fmt.Sprintf("Result written to file:      %s\n\n", filename)
 
-	return output
+	output.WriteString("\n============================================\n")
+	fmt.Fprintf(&output, "  Output: %s\n", filename)
+	output.WriteString("============================================\n\n")
+
+	return output.String()
 }
 
 func WriteOutput(outputPath string, output string) error {
 
-	pathName := strings.TrimSuffix(outputPath, ".txt")
+	if err := os.MkdirAll("reports", 0755); err != nil {
+		return err
+	}
+
+	// Extract filename without extension
+	filename := filepath.Base(outputPath)
+	pathName := strings.TrimSuffix(filename, ".txt")
+
+	// Construct initial output path
+	finalPath := filepath.Join("reports", filename)
 
 	counter := 1
-	finalPath := outputPath
 
 	for {
 
@@ -145,7 +306,11 @@ func WriteOutput(outputPath string, output string) error {
 		if err != nil {
 			return err // if different filesystem error occurred
 		}
-		finalPath = fmt.Sprintf("%s(%d).txt", pathName, counter)
+		finalPath = filepath.Join(
+			"reports",
+			fmt.Sprintf("%s(%d).txt", pathName, counter),
+		)
+
 		counter++
 	}
 

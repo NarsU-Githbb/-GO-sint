@@ -83,7 +83,7 @@ func (scrp *FnScraper) loadMockProfiles() ([]models.MockProfile, error) {
 	return profiles, nil
 }
 
-func (scrp *FnScraper) SimulatedFnCheck(ctx context.Context, fullName string) (*models.FullModel, error) {
+func (scrp *FnScraper) SimulatedFnCheck(ctx context.Context, fullName string) (*models.MockProfile, error) {
 
 	if err := scrp.mockLimiter.Wait(ctx); err != nil {
 		return nil, fmt.Errorf("rate limiter error: %w", err)
@@ -94,56 +94,25 @@ func (scrp *FnScraper) SimulatedFnCheck(ctx context.Context, fullName string) (*
 		return nil, fmt.Errorf("failed to read mock database: %w", err)
 	}
 
-	// Create lowercase input query
-	LowcaseInputQuery := strings.ToLower(strings.TrimSpace(fullName))
+	lowcaseInputQuery := strings.ToLower(strings.TrimSpace(fullName))
 
 	for _, profile := range profiles {
-
-		// Match against lowercase api 'search_query' field
-
-		if strings.ToLower(profile.SearchQuery) == LowcaseInputQuery {
-
-			var Phone string
-			var Location models.MockAddress
-
-			for _, source := range profile.ScrapedSources {
-
-				if source.PhoneNumber != "" {
-					Phone = source.PhoneNumber
-				}
-
-				if source.Address.Street != "" {
-					Location = source.Address
-				}
-			}
-			names := strings.Fields(profile.Person.FullName)
-			firstName := ""
-			lastName := ""
-
-			if len(names) > 0 {
-				firstName = names[0]
-			}
-			if len(names) > 1 {
-				lastName = names[len(names)-1]
-			}
-
-			return &models.FullModel{
-				FirstName:   firstName,
-				LastName:    lastName,
-				Address:     Location,
-				PhoneNumber: Phone,
-			}, nil
+		if strings.ToLower(strings.TrimSpace(profile.SearchQuery)) == lowcaseInputQuery {
+			return &profile, nil
 		}
 	}
+
 	return nil, nil
 }
 
-func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (models.FullModel, error) {
+func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (models.FnSearchResults, error) {
 
 	profilePointer, err := scrp.SimulatedFnCheck(ctx, fullName)
 	if err != nil {
-		return models.FullModel{}, err
+		return models.FnSearchResults{}, err
 	}
+
+	//return validation if name can't be found inside API
 
 	if profilePointer == nil {
 		names := strings.Fields(strings.TrimSpace(fullName))
@@ -154,21 +123,72 @@ func (scrp *FnScraper) ExecuteFullSearch(ctx context.Context, fullName string) (
 		if len(names) > 0 {
 			firstName = names[0]
 		}
+
 		if len(names) > 1 {
 			lastName = names[len(names)-1]
 		}
 
-		return models.FullModel{
-			FirstName: firstName,
-			LastName:  lastName,
-			Address: models.MockAddress{
-				Street:     "not found!",
-				PostalCode: "not found!",
-				City:       "not found!",
+		return models.FnSearchResults{
+			Summary: models.FullModel{
+				FirstName: firstName,
+				LastName:  lastName,
+				Address: models.MockAddress{
+					Street:     "not found!",
+					PostalCode: "not found!",
+					City:       "not found!",
+				},
+				PhoneNumber: "not found!",
 			},
-			PhoneNumber: "not found!",
+			Raw: models.MockProfile{
+				SearchQuery: fullName,
+				Status:      "not_found",
+				Person: struct {
+					FullName        string `json:"full_name"`
+					BirthYear       int    `json:"birth_year"`
+					CurrentLocation string `json:"current_location"`
+				}{
+					FullName: fullName,
+				},
+				ScrapedSources: []models.ScrapedSource{},
+			},
 		}, nil
 	}
 
-	return *profilePointer, nil
+	//return validation if name was found inside API
+
+	var phone string
+	var location models.MockAddress
+
+	for _, source := range profilePointer.ScrapedSources {
+		if source.PhoneNumber != "" {
+			phone = source.PhoneNumber
+		}
+
+		if source.Address.Street != "" {
+			location = source.Address
+		}
+	}
+
+	names := strings.Fields(profilePointer.Person.FullName)
+
+	firstName := ""
+	lastName := ""
+
+	if len(names) > 0 {
+		firstName = names[0]
+	}
+
+	if len(names) > 1 {
+		lastName = names[len(names)-1]
+	}
+
+	return models.FnSearchResults{
+		Summary: models.FullModel{
+			FirstName:   firstName,
+			LastName:    lastName,
+			Address:     location,
+			PhoneNumber: phone,
+		},
+		Raw: *profilePointer,
+	}, nil
 }

@@ -1,17 +1,28 @@
 package models
 
+type IPSearchResults struct {
+	Summary IPModel      `json:"summary"`
+	Raw     RawIPResults `json:"raw"`
+}
+
+type RawIPResults struct {
+	IPAPI   *IpApiResponse   `json:"ip_api,omitempty"`
+	IPWhoIs *IpWhoIsResponse `json:"ip_whois,omitempty"`
+	AbuseIP *IPAbuseReport   `json:"abuse_ipdb,omitempty"`
+}
+
 type IPModel struct {
-	IP          string
-	ISP         string
-	Location    Coordinates
-	IsValidated bool     // True if APIs agree on core metrics
-	Warning     []string // Populated if the APIs disagree
+	IP          string      `json:"ip"`
+	ISP         string      `json:"isp"`
+	Location    Coordinates `json:"location"`
+	IsValidated bool        `json:"is_validated"` // True if APIs agree on core metrics
+	Warning     []string    `json:"warnings"`     // Populated if the APIs disagree
 
 	// AbuseIPDB threat intelligence only
-	AbuseConfidenceScore *int   `json:"abuse_confidence_score,omitempty"`
-	TotalReports         *int   `json:"total_reports,omitempty"`
-	LastReportedAt       string `json:"last_reported_at,omitempty"`
-	Errors               []string
+	AbuseConfidenceScore *int     `json:"abuse_confidence_score,omitempty"`
+	TotalReports         *int     `json:"total_reports,omitempty"`
+	LastReportedAt       string   `json:"last_reported_at,omitempty"`
+	Errors               []string `json:"errors"`
 }
 
 type Coordinates struct {
