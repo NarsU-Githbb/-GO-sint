@@ -19,10 +19,12 @@ type IPModel struct {
 	Warning     []string    `json:"warnings"`     // Populated if the APIs disagree
 
 	// AbuseIPDB threat intelligence only
-	AbuseConfidenceScore *int     `json:"abuse_confidence_score,omitempty"`
-	TotalReports         *int     `json:"total_reports,omitempty"`
-	LastReportedAt       string   `json:"last_reported_at,omitempty"`
-	Errors               []string `json:"errors"`
+	AbuseConfidenceScore *int   `json:"abuse_confidence_score,omitempty"`
+	TotalReports         *int   `json:"total_reports,omitempty"`
+	LastReportedAt       string `json:"last_reported_at,omitempty"`
+
+	//Populated if there's any API errors (like connection errors for example)
+	Errors []string `json:"errors"`
 }
 
 type Coordinates struct {

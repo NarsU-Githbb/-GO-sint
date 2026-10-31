@@ -1,9 +1,5 @@
 package models
 
-//use github api for both username / fullname??
-
-//Check the Json stuff later
-
 type UserModel struct {
 	X          bool     `json:"x"`
 	Youtube    bool     `json:"linked_in"`

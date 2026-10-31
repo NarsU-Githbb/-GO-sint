@@ -104,8 +104,6 @@ func (scrp *IpScraper) IpWhoIsCheck(ctx context.Context, ip string) (*models.IpW
 	return &data, nil
 }
 
-//AbuseIP needs API KEY??
-
 func (scrp *IpScraper) IpAbuseCheck(ctx context.Context, ip string) (*models.IPAbuseReport, error) {
 
 	url := fmt.Sprintf("https://api.abuseipdb.com/api/v2/check?ipAddress=%s", ip)

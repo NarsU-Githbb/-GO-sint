@@ -20,12 +20,13 @@ var (
 )
 
 func main() {
+
 	// Load environment variables from .env
 	if err := godotenv.Load(); err != nil {
 		fmt.Fprintln(os.Stderr, "Warning: .env file not found; using system environment variables")
 	}
 
-	//context is needed so that the program doesn't secretly keep going even after ctrl + C
+	//context is needed so that the program doesn't secretly keep going after ctrl + C
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -66,7 +67,6 @@ func main() {
 		}
 
 		if *rawOutput {
-			// Raw output
 			makeRawFilename := createFileName(argument)
 			rawFileName := fmt.Sprintf("raw_n_%s.txt", makeRawFilename)
 			rawFileContent := CreateRawFullOutput(result.Raw, rawFileName)
@@ -79,7 +79,9 @@ func main() {
 			}
 
 		} else {
+
 			// Normal output
+
 			makeFilename := createFileName(argument)
 			fileName := fmt.Sprintf("n_%s.txt", makeFilename)
 			fileContent := CreateFullOutput(argument, result.Summary, fileName)
@@ -104,7 +106,7 @@ func main() {
 		}
 
 		if *rawOutput {
-			// Raw output
+
 			makeRawFilename := createFileName(argument)
 			rawFileName := fmt.Sprintf("raw_n_%s.txt", makeRawFilename)
 			rawFileContent := CreateRawIPOutput(result.Raw, rawFileName)
@@ -117,7 +119,7 @@ func main() {
 			}
 
 		} else {
-			// Normal output
+
 			makeFilename := createFileName(argument)
 			fileName := fmt.Sprintf("ip_%s.txt", makeFilename)
 			fileContent := CreateIPOutput(argument, result.Summary, fileName)
@@ -179,7 +181,7 @@ func printHelp() {
 	)
 
 	fmt.Println()
-	fmt.Println(italic + bold + "Usage: go run . " + blue + " [options] <input>" + reset)
+	fmt.Println(italic + bold + "Usage: go run . " + blue + " [flag] <input>" + reset)
 	fmt.Println()
 
 	fmt.Println(yellow + bold + "Flags:" + reset)
@@ -194,13 +196,13 @@ func printHelp() {
 
 	fmt.Println(yellow + bold + "Examples:" + reset)
 	fmt.Println()
-	fmt.Println(bold + "1. go run . " + blue + "-n Dwight Schrute" + reset)
+	fmt.Println(bold + "1. go run . " + blue + "-n 'John Doe'" + reset)
 	fmt.Println()
-	fmt.Println(bold + "First Name:" + reset + " Dwight")
-	fmt.Println(bold + "Last Name:" + reset + " Schurute")
-	fmt.Println(bold + "Address:" + reset + " Schrute Farms, Rural Route 6, Honesdale, PA 18431")
-	fmt.Println(bold + "Phone Number:" + reset + " 308-826-5962")
-	fmt.Println(bold + "Result written to file:" + reset + "n_dwight_schrute.txt")
+	fmt.Println(bold + "First Name:" + reset + " John")
+	fmt.Println(bold + "Last Name:" + reset + " Doe")
+	fmt.Println(bold + "Address:" + reset + " Mango street 12 A 4, 00100 Helsinki")
+	fmt.Println(bold + "Phone Number:" + reset + " +358 40 123 4567")
+	fmt.Println(bold + "Result written to file:" + reset + " n_john_doe.txt")
 	fmt.Println()
 	fmt.Println(bold + "2. go run . " + blue + " -ip 8.8.8.1" + reset)
 	fmt.Println()

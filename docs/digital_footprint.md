@@ -21,7 +21,7 @@ Data that is collected about a user **without their explicit execution or immedi
 * **Exif & Metadata:** Hidden data embedded in files, such as the exact GPS coordinates, timestamp & device model attached to an uploaded JPEG.
 * **Network & Browser Identifiers:** IP addresses, DNS leak fragments, cookies & browser fingerprints.
 * **Behavioral Analytics:** Server logs detailing exactly when you visited a site, how long you stayed & what links you hovered over.
-* **Third-Party Aggregation:** Data scraped, packaged & sold by data brokers (e.g., voter registration links, property records, marketing profiles).
+* **Third-Party Aggregation:** Data scraped, packaged & sold by data brokers (e.g., voter registration links, property records, marketing profiles).V
 
 ## Why is it important?
 

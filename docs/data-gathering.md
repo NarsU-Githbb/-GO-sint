@@ -2,11 +2,28 @@
 
 This OSINT tool has 3 different search methods:
 
-* **Full Name:** Method gathers the person's address and phone number, along with any additional personal information available. This method uses made up mock API & is meant for educational purposes only. Public API is not used, because it's illegal to scrape, aggregate or programmatically query real people's phone numbers and addresses without their consent (under EU's GDPR / Finnish privacy laws).
+## **Full Name:** 
 
-* **IP Address:** Method determine the location and Internet Service Provider (ISP) among some information on the possibility if the IP has been abused. This method integrates ip-api, ipwhois & abuseipdb APIs & cross-referances so that the information can be validated. Mostly the cross-referencing happens between ip-api & ipwhois APIs, while Abuseipdb focuses on the information if IP has been compromised. 
+Method demonstrates how personal information such as names, residential addresses and phone numbers could be gathered / structured in an OSINT pipeline. For educational and legal reasons, it does not query external APIs or real databases. Instead, it uses a locally stored JSON file (`Fullname_mockAPI.json`) that acts as a simulated database containing predefined mock profiles. Public API is not used, because it's illegal to scrape, aggregate or programmatically query real people's phone numbers and addresses without their consent (under EU's GDPR / Finnish privacy laws). So no real individuals are searched, tracked or queried here (...and Fullname_mockAPI.json isn't a collection of real personal information ether just some made up stuff).
 
-* **Social Media Username:** Method checks for the user's presence on 5 social media platforms - including X, Youtube, Soundcloud, Github and Gitea to determine if accounts exists on the platform. This one uses basic http.requests to check if the username can be found on the platform according to http status codes. 
+When a user inputs a full name, the application loads & decodes the local JSON dataset using Go's `encoding/json` package. It then normalizes the search input by removing leading / trailing whitespaces and converts it to lowercase before comparing it against the stored search queries. If a matching profile is found, the application extracts the corresponding name, address & phone number. If no match is found, it returns a result indicating that the requested information is unavailable.
+
+## **IP Address:** 
+
+Method retrieves geographical and network-related information about an IP address and checks for potentially malicious activity using three external APIs: IP-API, IPWhoIs & AbuseIPDB.
+
+The application sends HTTP GET requests containing the IP address input to each API endpoint. The returned JSON responses are decoded using Go's `encoding/json` package into predefined structures within the application's models package. IP-API and IPWhoIs provide geographical coordinates (latitude & longitude) and Internet Service Provider (ISP) information, while AbuseIPDB provides threat intelligence data, including an abuse confidence score, total reports & the date of the last reported activity. AbuseIPDB requires an API key, which is loaded from the application's environment variables (`.env`).
+In order to require the API key, you need to register in AbuseIPDB (here's a link to free registeration: [AbuseIPDB Free Register](https://www.abuseipdb.com/register?plan=free) ).
+
+The application primarily cross-references the results from IP-API and IPWhoIs to identify inconsistencies in the returned ISP and geographical information. ISP names are compared between the two providers & geographical coordinates are checked against an allowed difference of 0.5 degrees (threshold of 55.6 km). If the returned information differs beyond the defined threshold, the application records a warning and marks the corresponding information as inconsistent.
+
+AbuseIPDB operates independently of this geographical comparison and supplements the results with information about previously reported malicious activity associated with the queried IP address.
+
+## **Social Media Username:** 
+
+Method checks for the user's presence on 5 social media platforms - including X, Youtube, Soundcloud, Github and Gitea to determine if accounts exists on the platform. This one uses basic go http.requests (`net/http`) to check if the username can be found on the platform according to http status codes. An HTTP 200 (OK) response is treated as an indication that a profile may exist, while an HTTP 404 (Not Found) response indicates that the requested profile could not be found. Other HTTP status codes, such as 403 (Forbidden), 429 (Too Many Requests), and server errors, are treated as unexpected responses and recorded as errors rather than as evidence that an account exists or does not exist.
+
+It's important to know that the HTTP status codes alone cannot reliably confirm whether a username belongs to an existing account. Platforms may redirect requests, restrict access, block automated requests, apply rate limits or return different responses depending on their own policies and infrastructure. The social media platforms chosen above I've personally tested with multiple different usernames & my tests have so far brought correct information (they could however change their approach to the statuscodes at some point - you never know). So the results should be interpreted as more of a indicator of possible account existing in the platform rather than definitive confirmation.
 
 ## 🛠️ Libraries and Methods
 
@@ -21,7 +38,7 @@ Instead of using heavy web scraping frameworks (like Playwright or Scrapy), this
 
 ## 🔄 API Integrations & Data Validation
 
-* **Integrated APIs:** `ip-api.com` (free tier), `IPWhois`, and `AbuseIPDB`.
+* **Integrated APIs:** `ip-api.com` (free tier), `IPWhois` and `AbuseIPDB`.
 * **Data Cross-Referencing:** different geolocation services maintain their own proprietary BGP and IP databases, information can occasionally mismatch. 
 
 ## ⏱️ Rate-Limiting Approach

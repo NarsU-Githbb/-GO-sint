@@ -287,11 +287,8 @@ func WriteOutput(outputPath string, output string) error {
 		return err
 	}
 
-	// Extract filename without extension
 	filename := filepath.Base(outputPath)
 	pathName := strings.TrimSuffix(filename, ".txt")
-
-	// Construct initial output path
 	finalPath := filepath.Join("reports", filename)
 
 	counter := 1

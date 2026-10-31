@@ -25,7 +25,7 @@ func NewUnScraper() *UnScraper {
 			Timeout: 7 * time.Second,
 		},
 
-		// Conservative local pacing defaults - These are not official platform limits.
+		// Conservative local pacing defaults
 		xLimiter:       rate.NewLimiter(rate.Every(3*time.Second), 1),
 		youtubeLimiter: rate.NewLimiter(rate.Every(3*time.Second), 1),
 		scLimiter:      rate.NewLimiter(rate.Every(3*time.Second), 1),

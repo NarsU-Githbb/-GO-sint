@@ -2,115 +2,167 @@
 
 A Lightweight command-line intelligence tool written in Go, designed to demonstrate automated open-source data aggregation techniques. Built strictly for educational purposes, this application showcases how to safely perform username profile lookups, query public IP geolocation endpoints and cross-reference threat intelligence data using Go Standard library rather than resource-heavy scraping frameworks.
 
-## Documentation
+## Project Overview
 
-Before you get started, you should read this documentation to understand the project & the concepts needed to grasp in order to understand why osint is useful technique for cybersecurity? (also they include answers to the testing questions inside kood/Sisu platform)
+Before you get started, you should read this documentation to understand the project & the concepts needed to grasp in order to understand "why osint is useful technique for cybersecurity"? Also reading the documentation includes answers to some of the testing questions inside kood/Sisu platform & has a detailed knowledge about the features inside the application / how they truly work.
+
+**Concepts:**
 
 * [What is OSINT?](docs/osint.md)
 * [Digital Footprint](docs/digital_footprint.md)
-* [CIA Triad](docs/cia_triad.md.md).
-* [Data Gathering Documentation](docs/data-gathering.md).
+* [CIA Triad](docs/cia_triad.md.md)
 
-## Docker Deployment and Execution
+**Features:**
 
-The project is a Go-based command-line application and does not require a graphical user interface or frontend.
+* [Data Gathering Documentation](docs/data-gathering.md)
 
-Docker is used to containerize the application and simplify deployment. A multi-stage Dockerfile automatically builds the Go executable and packages it into a lightweight runtime image.
+**For kood/Sisu Reviewers:**
 
-**The repository includes:**
+* [Information about the extra features](docs/testing.md)
 
-* A Dockerfile to build and package the application.
-* A docker-run.sh script to build and execute the application with a single command.
-* A .dockerignore file to optimize the Docker build context.
+## Prerequisites
 
-**Execution:**
+Depends on your preferred installation method:
 
+**Docker installation:**
 
-```bash
-./docker-run.sh --help
-```
+- Docker installed and running.
+- No separate Go installation required on the host machine.
 
-Example:
+**Manual installation:**
 
-```bash
-./docker-run.sh -n "Dwight Schrute"
-```
+- Go version 1.26.0 (or later) installed on your system.
+- Git (for cloning the repository).
 
-Only Docker is required on the host machine. Go, project dependencies, and compilation are handled automatically inside Docker.
+## Setup Configuration
 
-Generated reports can be persisted on the host machine using a Docker volume mount.
-
-Since this is a CLI application, no frontend, graphical interface, or separate application service is necessary.
-
-## 🚀 How to Install and Run (Without Docker)
-
-### 1. Prerequisites
-
-Make sure you have [Go](https://go.dev) installed on your system.
-
-### 2. Setup Configuration
-
-Clone the repository, navigate into the directory, and set up your local environment file:
+Clone the repository, navigate into the directory & set up your local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-*(Open the newly created `.env` file and append your private AbuseIPDB or other API tokens where requested).*
+*Open the newly created `.env` file & append your private AbuseIPDB APIKey if you want to implement it. It's an optional feature though, so you can leave .env as it is & the program will work as intended (it just skips the optional AbuseIPDB check).*
 
-### 3. Usage Syntax
+## Usage Guide
 
 Run the core script using standard Go invocation combined with one of the search mode flags:
 
 ```bash
-go run . [options] <input>
+go run . [flag] <input>
 ```
 
-#### Available Flags:
+### Available Flags:
 
 * `-n` : Performs a simulated full-name query (Mock PII data).
 * `-ip` : Performs a live cross-referenced IP lookup.
 * `-un` : Performs a multi-platform username audit.
+* `-raw` : Returns raw API responses if possible (add it before another flag).
 
-### 💡 Execution Examples
+## How to Install and Run with Docker (Recommended Method)
 
-#### 1. Full-Name Search (Mock Environment)
+The project is a Go-based command-line application and does not require a graphical user interface or frontend. Docker simplifies deployment by automatically building and packaging the Go application into a lightweight runtime image. No separate Go installation or manual dependency compilation is required on the host machine.
+
+### The repository includes:
+
+* **Dockerfile** - Builds and packages the application.
+* **docker-run.sh** - Builds and executes the application using a single command.
+* **.dockerignore** - Optimizes the Docker build context.
+
+### Execution:
+
 ```bash
-go run . -n "Dwight Schrute"
+./docker-run.sh --help
 ```
-**Output Preview:**
+
+### Examples:
+
 ```bash
-First Name: Dwight
-Last Name: Schrute
+./docker-run.sh -n "Dwight Schrute"
+```
+
+```bash
+./docker-run.sh -ip 8.8.8.8
+```
+
+```bash
+./docker-run.sh -un torvalds
+```
+
+If you want quickly to test every available CLI command easily - just run this command:
+
+```bash
+./docker-run.sh -all
+```
+
+### Execution Output Examples
+
+1. **Full-Name Search Example (Mock Environment)**
+
+```bash
+go run . -n "John Doe"
+```
+
+**Output Preview:**
+
+```bash
+First Name: John
+Last Name: Doe
 Address: Mango street 12 A 4, 00100 Helsinki
 Phone Number: +358 40 123 4567
 Result written to file: `n_dwight_schrute.txt`
 ```
 
-#### 2. IP Address Lookup
+2. **IP Address Lookup Example**
+
 ```bash
-go run . -ip 1.1.1.1
-```
-**Output Preview:**
-```bash
-ISP: Cloudflare, Inc.
-Location: -33.4940, 143.2104
-Result written to file: `ip_1_1_1_1.txt`
+go run . -ip 8.8.8.1
 ```
 
-#### 3. Social Media Username Probing
-```bash
-go run . -un @recyclops
-```
 **Output Preview:**
+
 ```bash
-Second Life: yes
-X: no
-Youtube: no
-Instagram: no
-GitHub: no
-Result written to file: `un_recyclops.txt`
+IP: 8.8.8.1
+ISP: Google LLC
+Location: 37.422000,-122.085000
+Validated: true
+Warnings: None
+Abuse Confidence Score: Not available
+Total Reports: Not available
+Last Reported At: Not searched
+Result written to file: ip_8_8_8_1.txt
 ```
+
+3. **Social Media Username Check Example**
+
+```bash
+go run . -un torvalds
+```
+
+
+```bash
+X: true
+Youtube: false
+Soundcloud: true
+Github: true
+Gitea: true
+Result written to file: un_torvalds.txt
+```
+
+4. **Raw Responses Examples**
+
+```bash
+go run . -raw -n "Dwight Schrute" 
+```
+
+or 
+
+```bash
+go run . -raw -ip 1.1.1.1
+```
+
+Username search doesn't have `-raw` output as it doesn't utilize any APIs.
+
 ## 🔐 Security & API Configuration
 
 The application securely interfaces with external data sources without exposing proprietary credentials inside the version control history:
@@ -123,6 +175,6 @@ The application securely interfaces with external data sources without exposing 
 
 As an educational OSINT tool, keeping our scraping ethical is a priority:
 
-* **Public Data Only:** The tool exclusively queries publicly available OSINT data and endpoint services, avoiding any authenticated or private databases.
+* **Publicly Accessible Data Sources:** The tool retrieves information from publicly accessible OSINT services and external API endpoints. Some services, such as AbuseIPDB, require API-key authentication to access their threat intelligence APIs. The application does not access private databases or unauthorized information sources.
 * **Target-Specific Limits:** Our rate limiters are designed to respect the public terms of service of each API we target so we don't abuse their free infrastructure.
-* **Privacy-by-Design (Mock Data):** Because PII (Personally Identifiable Information) like real addresses and phone numbers fall under strict EU GDPR and Finnish privacy laws, the Full Name search method relies on completely simulated mock data. This demonstrates how a real OSINT pipeline functions without illegally scraping or aggregating live human identities.
+* **Privacy-by-Design (Mock Data):** Because PII (Personally Identifiable Information) like real addresses and phone numbers fall under strict EU GDPR / Finnish privacy laws, the Full Name search method relies on completely simulated mock data. This demonstrates how a real OSINT pipeline functions without illegally scraping or aggregating live human identities.
